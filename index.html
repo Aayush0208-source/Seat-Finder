@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seat Finder – Simple & Playful</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#0f1622; --text:#f8fafc; --muted:#cbd5e1; --line:#1f2a3a;
+      --ok:#22c55e; --mid:#f59e0b; --full:#ef4444; --accent:#60a5fa;
+    }
+    /* Themes */
+    body.theme-candy{ --accent:#fb7185; --ok:#22c55e; --mid:#fbbf24; --full:#ef4444; background: radial-gradient(90vmax 90vmax at 10% 10%, #2b1a3e 0%, #0b0f14 55%) fixed; }
+    body.theme-sunset{ --accent:#f97316; --ok:#10b981; --mid:#f59e0b; --full:#dc2626; background: radial-gradient(90vmax 90vmax at 80% 10%, #2a1a0e 0%, #0b0f14 55%) fixed; }
+    body.theme-aqua{ --accent:#22d3ee; --ok:#34d399; --mid:#fde047; --full:#f43f5e; background: radial-gradient(90vmax 90vmax at 20% 80%, #0a1f2a 0%, #0b0f14 55%) fixed; }
+    body.theme-grape{ --accent:#a78bfa; --ok:#4ade80; --mid:#f9a8d4; --full:#fb7185; background: radial-gradient(90vmax 90vmax at 80% 80%, #1e1433 0%, #0b0f14 55%) fixed; }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:var(--text);}
+    header{position:sticky; top:0; z-index:10; border-bottom:1px solid var(--line); backdrop-filter: blur(8px); background: rgba(11,15,20,.85)}
+    .wrap{max-width:980px; margin:0 auto; padding:14px 16px}
+    h1{margin:0; font-size:22px; letter-spacing:.3px}
+    .sub{margin:2px 0 0; color:var(--muted); font-size:13px}
+
+    main{max-width:980px; margin:0 auto; padding:16px; display:grid; gap:16px}
+    .card{background:rgba(15,22,34,.9); border:1px solid var(--line); border-radius:16px; padding:16px}
+
+    .row{display:flex; align-items:center; gap:10px}
+    .sp{justify-content:space-between}
+
+    .btn{appearance:none; border:2px solid transparent; background:var(--accent); color:#081018; padding:12px 16px; font-weight:800; border-radius:12px; cursor:pointer; font-size:14px}
+    .btn.ghost{background:transparent; color:var(--text); border-color:var(--line)}
+    .btn.small{padding:8px 12px; font-weight:700; font-size:12px}
+    .chip{font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid var(--line); color:var(--muted)}
+
+    label{font-size:13px; color:#e2e8f0}
+    select, input[type="text"], input[type="number"]{width:100%; padding:12px 14px; background:#0b1220; color:var(--text); border:1px solid var(--line); border-radius:12px}
+
+    .grid{display:grid; gap:12px; grid-template-columns:1fr}
+    @media(min-width:760px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    @media(min-width:980px){ .grid{grid-template-columns:repeat(3,1fr)} }
+
+    .zone{padding:16px; border:1px solid var(--line); border-radius:14px; background:#0c1424}
+    .zone h3{margin:0 0 6px; font-size:16px}
+    .status{display:flex; align-items:center; gap:8px; font-size:15px}
+    .dot{width:12px; height:12px; border-radius:50%}
+    .dot.ok{background:var(--ok)} .dot.mid{background:var(--mid)} .dot.full{background:var(--full)}
+
+    .big-buttons{display:grid; grid-template-columns:1fr; gap:10px}
+    @media(min-width:520px){ .big-buttons{grid-template-columns:repeat(3,1fr)} }
+    .vote{display:flex; align-items:center; justify-content:center; gap:8px; padding:14px 10px; font-size:16px; border:2px solid var(--line); border-radius:14px; background:#0b1220; cursor:pointer; font-weight:800}
+    .vote.ok{border-color:rgba(34,197,94,.35)}
+    .vote.mid{border-color:rgba(245,158,11,.35)}
+    .vote.full{border-color:rgba(239,68,68,.35)}
+
+    .map{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+    .map > div{background:#0b1220; border:1px dashed #294160; border-radius:12px; height:64px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#cbd5e1}
+
+    footer{text-align:center; color:var(--muted); font-size:12px; padding:10px 16px 24px}
+    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+  </style>
+</head>
+<body class="theme-candy">
+  <header>
+    <div class="wrap row sp">
+      <div>
+        <h1>Seat Finder 😊</h1>
+        <p class="sub">Tap. Share. Find a seat fast. No logins.</p>
+      </div>
+      <div class="row" style="gap:8px">
+        <button id="themeBtn" class="btn small" aria-label="Change theme">Change theme</button>
+        <button id="exportBtn" class="btn small ghost" aria-label="Export data as JSON">Export</button>
+        <button id="resetBtn" class="btn small ghost" aria-label="Clear all reports">Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="liveHeading">
+      <div class="row sp">
+        <h2 id="liveHeading" style="font-size:18px; margin:0">Live right now</h2>
+        <div class="row" style="gap:8px; flex-wrap:wrap">
+          <span class="chip"><span class="dot ok" style="display:inline-block; margin-right:6px"></span>Plenty</span>
+          <span class="chip"><span class="dot mid" style="display:inline-block; margin-right:6px"></span>Busy-ish</span>
+          <span class="chip"><span class="dot full" style="display:inline-block; margin-right:6px"></span>Full</span>
+        </div>
+      </div>
+      <div id="zonesGrid" class="grid" style="margin-top:12px" aria-live="polite"></div>
+
+      <div style="margin-top:14px">
+        <label for="windowMins">Count reports from the last (minutes)</label>
+        <input type="number" id="windowMins" min="1" value="10" />
+        <p class="sub" style="margin-top:6px">Old reports drop off automatically.</p>
+      </div>
+
+      <div style="margin-top:14px">
+        <h3 style="font-size:14px; margin:0 0 8px">Map sketch</h3>
+        <div id="map" class="map"></div>
+      </div>
+    </section>
+
+    <aside class="card" aria-labelledby="reportHeading">
+      <h2 id="reportHeading" style="font-size:18px; margin-top:0">Tell everyone how busy it is</h2>
+      <div class="big-buttons">
+        <button class="vote ok" data-level="empty">🟢 Plenty</button>
+        <button class="vote mid" data-level="moderate">🟡 Busy-ish</button>
+        <button class="vote full" data-level="full">🔴 Full</button>
+      </div>
+
+      <div style="display:grid; gap:10px; margin-top:12px">
+        <div>
+          <label for="zoneSelect">Where are you?</label>
+          <select id="zoneSelect"></select>
+        </div>
+        <div>
+          <label for="note">Optional note</label>
+          <input id="note" type="text" placeholder="e.g., Quiet corner open" />
+        </div>
+        <button id="submitBtn" class="btn">Submit</button>
+        <div id="submitMsg" class="sub" role="status" aria-live="polite"></div>
+      </div>
+
+      <hr style="border-color:var(--line); margin:16px 0" />
+
+      <h3 style="font-size:14px; margin:0 0 8px">Zones</h3>
+      <div id="zonesList" class="row" style="gap:8px; flex-wrap:wrap"></div>
+      <div class="row" style="gap:8px">
+        <input id="newZone" type="text" placeholder="Add new zone" aria-label="New zone name" />
+        <button id="addZoneBtn" class="btn small">Add</button>
+      </div>
+      <p class="sub" style="margin-top:6px">Tap any zone chip below to remove it.</p>
+
+      <hr style="border-color:var(--line); margin:16px 0" />
+
+      <h3 style="font-size:14px; margin:0 0 8px">How it works</h3>
+      <ul class="sub" style="margin:0 0 8px 18px; line-height:1.6">
+        <li>Pick a place, tap a colour.</li>
+        <li>Only recent taps count. Old ones fade out.</li>
+        <li>No accounts. No tracking. Local first.</li>
+      </ul>
+    </aside>
+  </main>
+
+  <footer>
+    <p>Seat Finder · playful MVP · works on any phone or laptop</p>
+  </footer>
+
+  <script>
+    // ---------- Basic config ----------
+    const LEVEL_SCORES = { empty: 0, moderate: 1, full: 2 };
+    const KEY = { ZONES: 'sf.zones', REPORTS: 'sf.reports', WINDOW: 'sf.windowMins', THEME:'sf.theme' };
+    const THEMES = ['theme-candy','theme-sunset','theme-aqua','theme-grape'];
+
+    // Preloaded zones requested
+    const DEFAULT_ZONES = ['Library','Student Guild','Cafe C','Canteen','Library level 2'];
+
+    // ---------- Storage helpers ----------
+    const load = (k, fallback) => { try{ const v = localStorage.getItem(k); return v? JSON.parse(v) : fallback; } catch { return fallback; } };
+    const save = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+    let zones = load(KEY.ZONES, DEFAULT_ZONES);
+    let reports = load(KEY.REPORTS, []);
+    let windowMins = Number(load(KEY.WINDOW, 10)) || 10;
+    let theme = load(KEY.THEME, THEMES[0]);
+
+    // ---------- Element refs ----------
+    const zoneSelect = document.getElementById('zoneSelect');
+    const noteInput = document.getElementById('note');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitMsg = document.getElementById('submitMsg');
+    const addZoneBtn = document.getElementById('addZoneBtn');
+    const newZoneInput = document.getElementById('newZone');
+    const zonesList = document.getElementById('zonesList');
+    const zonesGrid = document.getElementById('zonesGrid');
+    const map = document.getElementById('map');
+    const windowInput = document.getElementById('windowMins');
+    const resetBtn = document.getElementById('resetBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const themeBtn = document.getElementById('themeBtn');
+
+    // ---------- Renderers ----------
+    function renderZoneSelect(){ zoneSelect.innerHTML = zones.map(z => `<option value="${escapeHtml(z)}">${escapeHtml(z)}</option>`).join(''); }
+    function renderZonesList(){
+      zonesList.innerHTML = '';
+      zones.forEach((z, i) => {
+        const b = document.createElement('button');
+        b.className = 'btn small ghost';
+        b.textContent = z; b.title = 'Remove zone';
+        b.onclick = () => removeZone(i);
+        zonesList.appendChild(b);
+      });
+    }
+    function renderMap(){ map.innerHTML = zones.map(z => `<div>${escapeHtml(z)}</div>`).join(''); }
+
+    function renderGrid(){
+      const now = Date.now(); const cutoff = now - windowMins*60*1000;
+      const byZone = new Map(zones.map(z => [z, []]));
+      for(const r of reports){ if(r.ts >= cutoff && byZone.has(r.zone)) byZone.get(r.zone).push(r); }
+      zonesGrid.innerHTML = zones.map(z => {
+        const list = byZone.get(z);
+        const { status } = aggregate(list);
+        const label = status === 'ok' ? 'Plenty' : status === 'mid' ? 'Busy-ish' : 'Full';
+        const details = `${list.length} report${list.length===1?'':'s'} in ${windowMins}m`;
+        const updated = list.length ? `Updated ${timeAgo(Math.max(...list.map(r=>r.ts)))}` : 'No recent taps';
+        return `<div class="zone">
+          <div class="row sp"><h3>${escapeHtml(z)}</h3><span class="chip">${details}</span></div>
+          <div class="status"><span class="dot ${status}"></span><strong>${label}</strong></div>
+          <p class="sub" style="margin:6px 0 0">${updated}</p>
+        </div>`;
+      }).join('');
+    }
+
+    // ---------- Logic ----------
+    function aggregate(list){
+      if(!list || list.length===0) return { status:'mid', score:1 };
+      const now = Date.now(); let wsum=0, vsum=0;
+      for(const r of list){ const ageMin=(now-r.ts)/60000; const w=Math.max(.25, 1 - ageMin/Math.max(1, windowMins)); wsum+=w; vsum+=w*LEVEL_SCORES[r.level]; }
+      const score=vsum/wsum; // 0..2
+      return { status: score>=1.6? 'full' : score>=0.7? 'mid' : 'ok', score };
+    }
+
+    function submit(level){
+      const zone = zoneSelect.value; if(!zone) return;
+      const note = noteInput.value.trim();
+      reports.push({ id: crypto.randomUUID(), zone, level, note, ts: Date.now() });
+      save(KEY.REPORTS, reports); noteInput.value='';
+      submitMsg.textContent = `Thanks! Logged ${level} for ${zone}.`;
+      setTimeout(()=> submitMsg.textContent='', 1600);
+      tick();
+    }
+
+    function addZone(){
+      const z = newZoneInput.value.trim(); if(!z) return; if(zones.includes(z)) { alert('Zone already exists.'); return; }
+      zones.push(z); save(KEY.ZONES, zones); newZoneInput.value=''; boot();
+    }
+    function removeZone(index){ const z=zones[index]; if(!confirm(`Remove ${z}?`)) return; zones.splice(index,1); save(KEY.ZONES,zones); reports=reports.filter(r=>r.zone!==z); save(KEY.REPORTS,reports); boot(); }
+    function resetAll(){ if(!confirm('Clear all reports?')) return; reports=[]; save(KEY.REPORTS,reports); tick(); }
+    function exportData(){ const blob=new Blob([JSON.stringify({zones,reports},null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`seat_finder_export_${new Date().toISOString().replace(/[:.]/g,'_')}.json`; a.click(); URL.revokeObjectURL(url); }
+
+    function cycleTheme(){ const idx=(THEMES.indexOf(theme)+1)%THEMES.length; theme=THEMES[idx]; applyTheme(); save(KEY.THEME, theme); }
+    function applyTheme(){ document.body.className = theme; }
+
+    function timeAgo(ts){ const s=Math.max(1,Math.floor((Date.now()-ts)/1000)); if(s<60) return `${s}s ago`; const m=Math.floor(s/60); if(m<60) return `${m}m ago`; const h=Math.floor(m/60); return `${h}h ago`; }
+    function escapeHtml(str){ return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s])); }
+
+    // ---------- Wire up ----------
+    document.querySelectorAll('.vote').forEach(b=> b.addEventListener('click', ()=> submit(b.dataset.level)));
+    submitBtn.addEventListener('click', ()=> submit('moderate'));
+    addZoneBtn.addEventListener('click', addZone);
+    resetBtn.addEventListener('click', resetAll);
+    exportBtn.addEventListener('click', exportData);
+    windowInput.addEventListener('change', ()=>{ const v=Number(windowInput.value); windowMins = Number.isFinite(v)&&v>0? v : 10; save(KEY.WINDOW, windowMins); tick(); });
+    themeBtn.addEventListener('click', cycleTheme);
+
+    function boot(){ applyTheme(); renderZoneSelect(); renderZonesList(); renderMap(); windowInput.value=windowMins; tick(); }
+    function tick(){ renderGrid(); }
+
+    boot();
+    setInterval(tick, 8000);
+  </script>
+</body>
+</html>
